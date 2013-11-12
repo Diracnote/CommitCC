@@ -31,14 +31,12 @@ class DiffUtil(object):
             self.gone = []
             for line in lines:
                 outLine = line.decode(sys.getdefaultencoding())
-                preMod = "Files"
-                if outLine.startswith(preMod):
-                    midMod = "and"
-                    sufMod = "differ"
-                    localPath = outLine[len(preMod):outLine.find(midMod)].strip()
-                    remotePath = outLine[outLine.find(midMod) + len(midMod):outLine.find(sufMod)].strip()
-                    self.mod.append((localPath, remotePath))
-                    print(self.mod)
+                if(localRepo in outLine and remoteRepo in outLine):
+                    print(outLine)
+#                     localPath = outLine[len(preMod):outLine.find(midMod)].strip()
+#                     remotePath = outLine[outLine.find(midMod) + len(midMod):outLine.find(sufMod)].strip()
+#                     self.mod.append((localPath, remotePath))
+#                     print(self.mod)
                     
 if __name__ == '__main__':
     localRepo = r"C:\Demo\brt"
