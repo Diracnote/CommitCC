@@ -35,14 +35,17 @@ class DiffUtil(object):
         self.gone = []
         commandlist = ["diff"] + [self.localRepo, self.remoteRepo] + list(args)
         print("Diff命令：" + " ".join(commandlist))
+        print("=" * 20)
         print("Wait for diff ...")
         rc = subprocess.Popen(commandlist, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if rc == None:
             print("Diff Command Error!")
+            print("=" * 20)
             return None
         else:
             lines = rc.stdout.readlines()
             print("Diff done!")
+            print("=" * 20)
             for line in lines:
 #                 outLine = line.decode(sys.getdefaultencoding())
                 outLine = line.decode("GBK")  # 此处中文环境Windows命令行输出编码为GBK
