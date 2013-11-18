@@ -80,37 +80,37 @@ class ClearCase(object):
 
     def login(self, filePath, args=("",)):
         command = self.__getCommand(self.commands.get("login"), args)
-        self.__excute(command, filePath)
+        return self.__excute(command, filePath)
      
     def logout(self, filePath, args=("",)):
         command = self.__getCommand(self.commands.get("logout"), args)
-        self.__excute(command, filePath)
+        return self.__excute(command, filePath)
         
     #创建元素（文件及文件夹）
     def mkelem(self, filePath, args=("-nc",)):
         command = self.__getCommand(self.commands.get("mkelem"), args)
-        self.__excute(command, filePath)
+        return self.__excute(command, filePath)
         
     #CCRCCLI无mkdir命令，故用mkelem –eltype directory代替
     def mkdir(self, filePath, args=("-nc","-eltype", "directory")):
         command = self.__getCommand(self.commands.get("mkelem"), args)
-        self.__excute(command, filePath)
+        return self.__excute(command, filePath)
     
     def rm(self, filePath, args=("-nc",)):
         command = self.__getCommand(self.commands.get("rm"), args)
-        self.__excute(command, filePath)
+        return self.__excute(command, filePath)
         
     def checkout(self, filePath, args=("-nc",)):
         command = self.__getCommand(self.commands.get("checkout"), args)
-        self.__excute(command, filePath)
+        return self.__excute(command, filePath)
     
     def uncheckout(self, filePath, args=("-keep",)):
         command = self.__getCommand(self.commands.get("uncheckout"), args)
-        self.__excute(command, filePath)
+        return self.__excute(command, filePath)
     
     def checkin(self, filePath, args=("-nc",)):
         command = self.__getCommand(self.commands.get("checkin"), args)
-        self.__excute(command, filePath)
+        return self.__excute(command, filePath)
     
     def __getCommand(self, command, args=("",)):
         return " ".join([self.ccrc, command, "-username", self.username, "-ser", self.server, "-pas", self.password] + list(args))
@@ -121,18 +121,18 @@ class ClearCase(object):
         rc = subprocess.Popen(command, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if rc == None:
             print(" ".join(["CCRC Command Error:", command]))
-            sys.exit(1)
-            
-        lines = rc.stdout.readlines()
-        if len(lines) != 0:
-            for line in lines:
-#                 out = line.decode("UTF-8")
-                out = line.decode("GBK")
-#                 out = line.decode(sys.getdefaultencoding())
-                print(out, end="")
+            return 1
+             
+        outinfo,errinfo = rc.communicate()
+        if len(outinfo) != 0:
+#             out = line.decode("UTF-8")
+            out = outinfo.decode("GBK")
+#             out = line.decode(sys.getdefaultencoding())
+            print(out, end="")
+            if(out.startswith("CRCLI1095E")):
+                return 1
         else:
-            lines = rc.stderr.readlines()
-            for line in lines:
-                out = line.decode("GBK")
-                if not out.startswith("环境变量"):
-                    print(out, end="")
+            out = errinfo.decode("GBK")
+            if not out.startswith("环境变量"):
+                print(out, end="")
+        return 0

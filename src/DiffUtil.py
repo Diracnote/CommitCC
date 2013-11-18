@@ -1,3 +1,4 @@
+# encoding: utf-8
 '''
 Created on 2013-11-12 11:06
 
@@ -6,6 +7,7 @@ Created on 2013-11-12 11:06
 import subprocess
 import sys
 import os
+import configparser
 
 class DiffUtil(object):
     '''
@@ -17,27 +19,36 @@ class DiffUtil(object):
         删除文件：gone
     '''
     
-    def __init__(self, localRepo, remoteRepo, command="diff", args=("--brief",)):
+    def __init__(self, localRepo, remoteRepo, command="diff", args=["--brief", "-r"], ignore_file="config.ini"):
         '''
         Constructor
         '''
         self.localRepo = localRepo
         self.remoteRepo = remoteRepo
         self.command = command
+        args = self.initIgnore(args, ignore_file)
         self.args = args
         
-        rc = subprocess.Popen(["diff", " ".join(self.args), self.localRepo, self.remoteRepo], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.comm = []
+        self.mod = []
+        self.new = []
+        self.gone = []
+        commandlist = ["diff"] + [self.localRepo, self.remoteRepo] + list(args)
+        print("Diff命令：" + " ".join(commandlist))
+        print("=" * 20)
+        print("Wait for diff ...")
+        rc = subprocess.Popen(commandlist, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if rc == None:
             print("Diff Command Error!")
+            print("=" * 20)
             return None
         else:
             lines = rc.stdout.readlines()
-            self.comm = []
-            self.mod = []
-            self.new = []
-            self.gone = []
+            print("Diff done!")
+            print("=" * 20)
             for line in lines:
-                outLine = line.decode(sys.getdefaultencoding())
+#                 outLine = line.decode(sys.getdefaultencoding())
+                outLine = line.decode("GBK")  # 此处中文环境Windows命令行输出编码为GBK
                 if(localRepo in outLine and remoteRepo in outLine):
                     preLocalPos = outLine.find(localRepo)
                     preRemotePos = outLine.find(remoteRepo)
@@ -57,12 +68,21 @@ class DiffUtil(object):
                     remotePath = outLine[preRemotePos:outLine.find(":", preRemotePos + len(remoteRepo))].strip()
                     remoteName = outLine[outLine.rfind(" "):].strip()
                     self.gone.append((remotePath, remoteName))
-
-
-if __name__ == '__main__':
-    localRepo = r"C:\Demo\brt"
-    remoteRepo = r"E:\CNCC_DEV\ClearCaseWork\feichen_PRO_PISA_DEV\VC_PISA\PISA_SRC\BRTS\brts"
-    # cmd = " ".join(["diff", diffArgs, localRepo, ccRepo])
-    # pipe = subprocess.Popen(cmd)
-    diff = DiffUtil(localRepo, remoteRepo)
-    
+        
+    def initIgnore(self, args, config_file):
+        config = configparser.ConfigParser()
+        config.optionxform = str
+        config.read(config_file)
+        if "PATTERN" not in config["IGNORE"]:
+            print("CONFIG文件[IGNORE]段无PATTERN键")
+            sys.exit(0)
+        pattern_str = config.get("IGNORE", "PATTERN")
+#         if pattern == "":
+#             return args
+        pattern_list = pattern_str.split(" ")
+        print("忽略文件模式列表：")
+        for ignore in pattern_list:
+            if ignore != "":
+                print(ignore)
+                args.extend(["-x", ignore])
+        return args
