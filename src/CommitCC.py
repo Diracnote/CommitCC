@@ -14,6 +14,7 @@ from os.path import relpath
 from os import mkdir
 import configparser
 from os import sep
+import sys
 import os
 
 class CommitCC(object):
@@ -28,6 +29,24 @@ class CommitCC(object):
         diff = DiffUtil(local, remote)
         self.local = local
         self.remote = remote
+        for line in diff.new:
+            print(" ".join(["NEW:", sep.join(line)]))
+        for line in diff.gone:
+            print(" ".join(["GONE:", sep.join(line)]))
+        for line in diff.mod:
+            print(" ".join(["MOD:", str(line)]))
+        if len(diff.new) != 0 or len(diff.gone) != 0 or len(diff.mod) != 0:
+            option = input("Commit All(Y/N):")
+            while option.capitalize() not in ("Y","N"):
+                option = input("Commit All(Y/N):")
+            if option.capitalize() == "Y":
+                self.__excute(diff)
+            else:
+                pass
+        else:
+            pass
+
+    def __excute(self, diff):
         for line in diff.new:
             print(" ".join(["NEW:", sep.join(line)]))
             self.__commitNew(line)
